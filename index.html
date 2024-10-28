@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventory Management System</title>
+    <link rel="stylesheet" href="https://pyscript.net/latest/pyscript.css">
+    <script defer src="https://pyscript.net/latest/pyscript.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .inventory-system {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            width: 400px;
+        }
+
+        label {
+            font-size: 18px;
+            display: block;
+            margin-top: 10px;
+        }
+
+        input {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            font-size: 16px;
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        #inventory-result {
+            margin-top: 20px;
+            font-size: 18px;
+        }
+
+        .remove-btn {
+            background-color: #f44336;
+            margin-left: 10px;
+        }
+
+        .remove-btn:hover {
+            background-color: #d32f2f;
+        }
+    </style>
+</head>
+<body>
+    <div class="inventory-system">
+        <h1>Inventory Management System</h1>
+        
+        <label for="product-name">Product Name:</label>
+        <input type="text" id="product-name" placeholder="Enter product name">
+
+        <label for="quantity">Quantity:</label>
+        <input type="number" id="quantity" placeholder="Enter quantity" min="1">
+
+        <label for="price-per-item">Price per Item:</label>
+        <input type="number" id="price-per-item" placeholder="Enter price per item" step="0.01" min="0">
+
+        <button id="add-product-btn">Add Product</button>
+        <button id="reset-inventory-btn">Reset Inventory</button>
+        
+        <h3>Current Inventory</h3>
+        <div id="inventory-result"></div>
+    </div>
+
+    <py-script>
+        from js import document, window
+
+        # Save product to localStorage
+        def save_product_to_storage(products):
+            window.localStorage.setItem('products', str(products))
+
+        # Fetch all products from localStorage
+        def fetch_products_from_storage():
+            products = window.localStorage.getItem('products')
+            return eval(products) if products else []
+
+        # Display inventory data on the page
+        def display_inventory():
+            products = fetch_products_from_storage()
+            result_html = "<ul>"
+            for i, product in enumerate(products):
+                product_name, quantity, price_per_item = product['product_name'], product['quantity'], product['price_per_item']
+                total_value = quantity * price_per_item
+                result_html += f"<li>{product_name}: {quantity} units - ₱{price_per_item:.2f} each (Total: ₱{total_value:.2f}) "
+                result_html += f'<button class="remove-btn" onclick="remove_product({i})">Remove</button></li>'
+            result_html += "</ul>"
+            document.getElementById("inventory-result").innerHTML = result_html
+
+        # Function to handle adding a product
+        def add_product(event):
+            product_name = document.getElementById("product-name").value
+            quantity = int(document.getElementById("quantity").value)
+            price_per_item = float(document.getElementById("price-per-item").value)
+
+            if product_name and quantity > 0 and price_per_item > 0:
+                products = fetch_products_from_storage()
+                products.append({
+                    'product_name': product_name,
+                    'quantity': quantity,
+                    'price_per_item': price_per_item
+                })
+                save_product_to_storage(products)
+                display_inventory()
+            else:
+                document.getElementById("inventory-result").innerHTML = "<p>Please enter valid product information.</p>"
+
+        # Function to remove a product
+        def remove_product(index):
+            products = fetch_products_from_storage()
+            if 0 <= index < len(products):
+                del products[index]
+                save_product_to_storage(products)
+                display_inventory()
+
+        # Function to reset inventory
+        def reset_inventory():
+            window.localStorage.removeItem('products')
+            display_inventory()
+
+        # Attach event listeners
+        document.getElementById("add-product-btn").onclick = add_product
+        document.getElementById("reset-inventory-btn").onclick = reset_inventory
+
+        # Display inventory on page load
+        display_inventory()
+    </py-script>
+</body>
+</html>
